@@ -20,8 +20,8 @@ class CommandExecutor
     )
   end
 
-  def execute!(cmd)
-    cmd_result = execute(cmd)
+  def execute!(cmd, options = {})
+    cmd_result = execute(cmd, options)
     raise CommandError.new(cmd_result) unless cmd_result.exit_code.zero?
     cmd_result
   end

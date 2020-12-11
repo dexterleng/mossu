@@ -16,6 +16,13 @@ class ChecksController < ApplicationController
     render json: check
   end
 
+  def report
+    check = Check.find(params[:check_id])
+    return render json: {}, status: 404 unless check.report_exists?
+
+    redirect_to url_for(check.report)
+  end
+
   private
 
   def check_params

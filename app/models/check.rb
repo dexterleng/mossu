@@ -3,6 +3,10 @@ class Check < ApplicationRecord
   has_many :submissions
   has_one_attached :report
 
+  def report_exists?
+    report.attached?
+  end
+
   def transition_to_queued
     update!(status: :queued)
   end

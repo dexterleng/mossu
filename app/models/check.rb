@@ -3,6 +3,10 @@ class Check < ApplicationRecord
   has_many :submissions
   has_one_attached :report
 
+  def can_start?
+    created? && submissions.count >= 2
+  end
+
   def report_exists?
     report.attached?
   end

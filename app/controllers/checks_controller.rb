@@ -23,6 +23,17 @@ class ChecksController < ApplicationController
     redirect_to url_for(check.report)
   end
 
+  def start
+    check = Check.find(params[:check_id])
+
+    return render json: {}, status: 400 unless check.can_start?
+
+    check.transition_to_queued
+    StartCheckJob.perform_later(check.id)
+
+    render json: {}, status: 202
+  end
+
   private
 
   def check_params

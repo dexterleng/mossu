@@ -24,6 +24,7 @@ gem 'jbuilder', '~> 2.7'
 
 gem 'open3'
 gem 'pg'
+gem 'sidekiq'
 
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'

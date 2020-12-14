@@ -17,5 +17,6 @@ module Mossu
     # the framework and any gems in your application.
 
     config.active_job.queue_adapter = :sidekiq
+    config.webpacker.check_yarn_integrity = false
   end
 end

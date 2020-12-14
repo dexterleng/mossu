@@ -25,4 +25,5 @@ test:
   database: mossu_test
 
 production:
+  <<: *default
   database: mossu_production

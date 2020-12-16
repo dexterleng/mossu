@@ -1,5 +1,12 @@
 class ChecksController < ApplicationController
   def index
+    ids = checks_params[:id]
+    if ids.is_a?(Array)
+      checks = Check.find(ids)
+      render json: checks
+      return
+    end
+
     checks = Check.all.order(:created_at)
     render json: checks
   end
@@ -35,6 +42,10 @@ class ChecksController < ApplicationController
   end
 
   private
+
+  def checks_params
+    params.permit(id: [])
+  end
 
   def check_params
     params.require(:check).permit(:name)

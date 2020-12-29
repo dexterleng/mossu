@@ -12,4 +12,7 @@ COPY Gemfile Gemfile
 COPY Gemfile.lock Gemfile.lock
 RUN bundler install
 
+COPY bin/comment_stripper/ bin/comment_stripper/
+RUN cd bin/comment_stripper/ && npm install && cd ../../
+
 CMD rails s -b "0.0.0.0"

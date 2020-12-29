@@ -6,14 +6,8 @@ class StartCheckService
   end
 
   def perform
-    submissions = check.submissions
-    submissions.each do |submission|
-      zip = deserialize_submission_zip(submission)
-      process_submission(zip, submission)
-    end
-
-    processed_submissions = submissions.map { |s| processed_submission(s) }
-    result_url = upload_submissions(processed_submissions)
+    processed_submission_paths, = process_submissions
+    result_url = upload_submissions(processed_submission_paths)
     download_report(result_url)
     attach_report
 
@@ -23,6 +17,22 @@ class StartCheckService
   end
 
   private
+
+  def process_submissions
+    successes = []
+    failures = []
+
+    submissions = check.submissions
+    submissions.each do |submission|
+      zip = deserialize_submission_zip(submission)
+      path = process_submission(zip, submission)
+      successes << path
+    rescue StandardError => e
+      failures << { submission: submission, error: e }
+    end
+
+    [successes, failures]
+  end
 
   def attach_report
     check
@@ -42,8 +52,8 @@ class StartCheckService
     File.join(temp_dir, 'report.zip')
   end
 
-  def upload_submissions(submissions)
-    MossUploadingService.new(submissions: submissions).perform!
+  def upload_submissions(submission_paths)
+    MossUploadingService.new(submissions: submission_paths).perform!
   end
 
   def process_submission(zip, submission)

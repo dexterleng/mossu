@@ -11,6 +11,7 @@ class CommandExecutor
     print_cmd(cmd)
     stdout, stderr, status = Open3.capture3(cmd, options)
     exit_code = status.to_i
+    print_stderr(stderr) if exit_code.zero?
 
     CommandResult.new(
       command: cmd,
@@ -30,6 +31,10 @@ class CommandExecutor
 
   def print_cmd(cmd)
     logger.info "[command] #{cmd}"
+  end
+
+  def print_stderr(stderr)
+    logger.warn "[stderr] #{stderr}"
   end
 
   def logger

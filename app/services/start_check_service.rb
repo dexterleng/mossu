@@ -28,10 +28,15 @@ class StartCheckService
       path = process_submission(zip, submission)
       successes << path
     rescue StandardError => e
+      logger.error e
       failures << { submission: submission, error: e }
     end
 
     [successes, failures]
+  end
+
+  def logger
+    @logger ||= Logger.new(STDOUT)
   end
 
   def attach_report

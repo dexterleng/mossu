@@ -36,11 +36,8 @@ class SubmissionCommentStrippingService
 
   def strip_comments(src:, dst:)
     CommandExecutor.instance.execute!(
-      "node #{program} #{src} #{dst}"
+      "node index.js #{src} #{dst}",
+      chdir: Rails.root.join('bin/comment_stripper')
     )
-  end
-
-  def program
-    Rails.root.join('bin/comment_stripper/index.js')
   end
 end

@@ -7,9 +7,13 @@ class SubmissionProcessingService
   def perform
     extract(src_zip_file: submission_zip_path, dst_dir: extracted_dir)
     strip_comments(src_dir: extracted_dir, dst_dir: commentless_dir)
-    original_path_map = flatten(src_dir: commentless_dir, dst_dir: flattened_dir)
-    commit_to_output_dir(src_dir: flattened_dir, original_path_map: original_path_map)
-    nil
+    original_path_map = flatten(src_dir: commentless_dir, dst_dir: output_dir)
+
+    {
+      submission_zip_path: submission_zip_path,
+      output_dir: output_dir,
+      original_path_map: original_path_map
+    }
   ensure
     delete_temp_dir
   end
@@ -32,23 +36,9 @@ class SubmissionProcessingService
     SubmissionFlatteningService.new(src_dir: src_dir, dst_dir: dst_dir).perform
   end
 
-  def commit_to_output_dir(src_dir:, original_path_map:)
-    copy_folder_contents(src_dir: src_dir, dst_dir: output_dir)
-    original_path_map_file = File.join(output_dir, 'original_path_map.json')
-    File.write(original_path_map_file, original_path_map.to_json)
-  end
-
   def extracted_dir
     @extracted_dir ||= begin
       dir = File.join(temp_dir, 'extracted')
-      mkdir(dir)
-      dir
-    end
-  end
-
-  def flattened_dir
-    @flattened_dir ||= begin
-      dir = File.join(temp_dir, 'flattened')
       mkdir(dir)
       dir
     end

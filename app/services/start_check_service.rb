@@ -6,9 +6,12 @@ class StartCheckService
   end
 
   def perform
-    processed_submission_paths, = process_submissions
-    result_url = upload_submissions(processed_submission_paths)
+    processed_submission_results, = process_submissions
+    process_submission_paths = processed_submission_results.map { |r| r[:output_dir] }
+
+    result_url = upload_submissions(process_submission_paths)
     download_report(result_url)
+    zip_report
     attach_report
 
     nil
@@ -25,8 +28,7 @@ class StartCheckService
     submissions = check.submissions
     submissions.each do |submission|
       zip = deserialize_submission_zip(submission)
-      path = process_submission(zip, submission)
-      successes << path
+      successes << process_submission(zip, submission)
     rescue StandardError => e
       failures << { submission: submission, error: e }
     end
@@ -45,7 +47,19 @@ class StartCheckService
   end
 
   def download_report(result_url)
-    MossReportDownloadingService.new(result_url: result_url, dst_report: report_zip).perform
+    MossReportDownloadingService.new(result_url: result_url, dst_report: report_path).perform
+  end
+
+  def zip_report
+    zip_folder(src: report_path, dst: report_zip)
+  end
+
+  def report_path
+    @report_path ||= begin
+      dir = File.join(temp_dir, 'report')
+      mkdir(dir)
+      dir
+    end
   end
 
   def report_zip
@@ -59,8 +73,12 @@ class StartCheckService
   def process_submission(zip, submission)
     processed_submission_path = processed_submission(submission)
     mkdir(processed_submission_path)
-    SubmissionProcessingService.new(submission_zip_path: zip, output_dir: processed_submission_path).perform
-    processed_submission_path
+    result = SubmissionProcessingService.new(submission_zip_path: zip, output_dir: processed_submission_path).perform
+
+    file_count = Dir.glob(File.join(processed_submission_path, '**', '*')).select { |file| File.file?(file) }.count
+    raise StandardError.new("Zero files found in processed_submission_path #{processed_submission_path}") if file_count.zero?
+
+    result
   end
 
   def processed_submission(submission)
@@ -108,6 +126,13 @@ class StartCheckService
   def mkdir(dir)
     CommandExecutor.instance.execute!(
       "mkdir #{dir}"
+    )
+  end
+
+  def zip_folder(src:, dst:)
+    absolute_dst = File.expand_path(dst)
+    CommandExecutor.instance.execute!(
+      "cd #{src} && zip -r #{absolute_dst} ."
     )
   end
 end

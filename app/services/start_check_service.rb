@@ -14,6 +14,11 @@ class StartCheckService
     zip_report
     attach_report
 
+    unanonymize_policies = submissions_unanonymization_policies(processed_submission_results)
+    unanonymize_report(src: report_path, dst: unanonymized_report_path, policies: unanonymize_policies)
+
+    zip_unanonymized_report
+    attach_unanonymized_report
     nil
   ensure
     delete_temp_dir
@@ -46,8 +51,40 @@ class StartCheckService
       )
   end
 
+  def attach_unanonymized_report
+    check
+      .unanonymized_report
+      .attach(
+        io: File.open(unanonymized_report_zip),
+        filename: 'unanonymized_report.zip',
+        content_type: 'application/zip'
+      )
+  end
+
   def download_report(result_url)
     MossReportDownloadingService.new(result_url: result_url, dst_report: report_path).perform
+  end
+
+  def unanonymize_report(args)
+    UnanonymizeReportService.new(args).perform
+  end
+
+  def submissions_unanonymization_policies(processed_submission_results)
+    processed_submission_results.map { |r| submission_unanonymization_policies(r) }
+                                .reduce(:merge)
+  end
+
+  def submission_unanonymization_policies(processed_submission_result)
+    directory_from = processed_submission_result[:output_dir]
+    # MOSS adds a backslash in the report to directories if missing
+    directory_from += '/' unless directory_from.ends_with?('/')
+    directory_to = File.basename(processed_submission_result[:submission_zip_path])
+    directory_policy = {}
+    directory_policy[directory_from] = directory_to
+
+    file_policies = processed_submission_result[:original_path_map]
+
+    directory_policy.merge(file_policies)
   end
 
   def zip_report
@@ -64,6 +101,22 @@ class StartCheckService
 
   def report_zip
     File.join(temp_dir, 'report.zip')
+  end
+
+  def zip_unanonymized_report
+    zip_folder(src: unanonymized_report_path, dst: unanonymized_report_zip)
+  end
+
+  def unanonymized_report_path
+    @unanonymized_report_path ||= begin
+      dir = File.join(temp_dir, 'unanonymized_report')
+      mkdir(dir)
+      dir
+    end
+  end
+
+  def unanonymized_report_zip
+    File.join(temp_dir, 'unanonymized_report.zip')
   end
 
   def upload_submissions(submission_paths)
@@ -94,7 +147,7 @@ class StartCheckService
   end
 
   def deserialized_submission_zip(submission)
-    File.join(extracted_submissions_dir, "#{submission.id}.zip")
+    File.join(extracted_submissions_dir, "#{submission.id}_#{submission.zip_file.filename}")
   end
 
   def extracted_submissions_dir

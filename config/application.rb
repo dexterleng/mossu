@@ -9,7 +9,8 @@ Bundler.require(*Rails.groups)
 module Mossu
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 6.0
+    # Taken from: https://github.com/nsarno/knock/issues/245#issuecomment-524918268
+    config.load_defaults 6.0 and config.autoloader = :classic
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration can go into files in config/initializers

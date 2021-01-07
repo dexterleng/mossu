@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  has_many :checks
+
   has_secure_password
   validates :username, presence: true
   VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i.freeze

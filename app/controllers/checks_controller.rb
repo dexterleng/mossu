@@ -1,37 +1,40 @@
 class ChecksController < ApplicationController
+  include Knock::Authenticable
+  before_action :authenticate_user
+
   def index
     ids = checks_params[:id]
     if ids.is_a?(Array)
-      checks = Check.find(ids)
+      checks = current_user.checks.find(ids)
       render json: checks
       return
     end
 
-    checks = Check.all.order(:created_at)
+    checks = current_user.checks.order(:created_at)
     render json: checks
   end
 
   def show
-    check = Check.find(params[:id])
+    check = current_user.checks.find(params[:id])
     render json: check
   end
 
   def create
-    check = Check.create!(
+    check = current_user.checks.create!(
       check_params.merge(status: 'created')
     )
     render json: check
   end
 
   def report
-    check = Check.find(params[:check_id])
+    check = current_user.checks.find(params[:check_id])
     return render json: {}, status: 404 unless check.unanonymized_report_exists?
 
     redirect_to url_for(check.unanonymized_report)
   end
 
   def start
-    check = Check.find(params[:check_id])
+    check = current_user.checks.find(params[:check_id])
 
     return render json: {}, status: 400 unless check.can_start?
 

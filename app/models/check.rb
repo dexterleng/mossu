@@ -1,6 +1,7 @@
 class Check < ApplicationRecord
   enum status: { created: 0, queued: 1, active: 2, completed: 3, failed: 4 }
   has_many :submissions
+  belongs_to :user
   has_one_attached :report
   has_one_attached :unanonymized_report
 

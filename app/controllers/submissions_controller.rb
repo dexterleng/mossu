@@ -1,6 +1,10 @@
 class SubmissionsController < ApplicationController
+  include Knock::Authenticable
+  before_action :authenticate_user
+
   def create
-    Submission.create!(submission_params)
+    check = current_user.checks.find(submission_params[:check_id])
+    check.submissions.create!(submission_params)
   end
 
   private

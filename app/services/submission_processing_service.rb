@@ -24,7 +24,7 @@ class SubmissionProcessingService
 
   def extract(src_zip_file:, dst_dir:)
     CommandExecutor.instance.execute!(
-      "unzip -o #{src_zip_file} \"*.js\" -d #{dst_dir} -x */node_modules/*"
+      "unzip -o #{src_zip_file} \"*.js\" -d #{dst_dir} -x \"*/node_modules/*\" -x \"node_modules/*\""
     )
   end
 

@@ -6,10 +6,17 @@ class StartCheckService
   end
 
   def perform
+    base_submission_path = nil
+    if check.base_submission.attached?
+      deserialized_base_submission_zip = deserialize_base_submission_zip
+      BaseSubmissionProcessingService.new(submission_zip_path: deserialized_base_submission_zip, output_dir: extracted_base_submission_dir).perform
+      base_submission_path = extracted_base_submission_dir
+    end
+
     processed_submission_results, = process_submissions
     process_submission_paths = processed_submission_results.map { |r| r[:output_dir] }
 
-    result_url = upload_submissions(process_submission_paths)
+    result_url = upload_submissions(process_submission_paths, base_submission_path)
     download_report(result_url)
     zip_report
     attach_report
@@ -119,8 +126,8 @@ class StartCheckService
     File.join(temp_dir, 'unanonymized_report.zip')
   end
 
-  def upload_submissions(submission_paths)
-    MossUploadingService.new(submissions: submission_paths).perform!
+  def upload_submissions(submission_paths, base_submission_path = nil)
+    MossUploadingService.new(submissions: submission_paths, base_submission: base_submission_path).perform!
   end
 
   def process_submission(zip, submission)
@@ -164,6 +171,22 @@ class StartCheckService
       file.write(submission.zip_file.download)
     end
     path
+  end
+
+  def extracted_base_submission_dir
+    @extracted_base_submission_dir ||= begin
+      dir = File.join(temp_dir, 'base_submission')
+      mkdir(dir)
+      dir
+    end
+  end
+
+  def deserialize_base_submission_zip
+    deserialized_base_submission_zip = File.join(temp_dir, 'base_submission.zip')
+    File.open(deserialized_base_submission_zip, 'wb') do |file|
+      file.write(check.base_submission.download)
+    end
+    deserialized_base_submission_zip
   end
 
   def temp_dir

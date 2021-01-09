@@ -1,10 +1,11 @@
 class MossUploadingService
   class ParseError < RuntimeError; end
 
-  attr_reader :submissions
+  attr_reader :submissions, :base_submission
 
-  def initialize(submissions:)
+  def initialize(submissions:, base_submission:)
     @submissions = submissions
+    @base_submission = base_submission
   end
 
   def perform!
@@ -26,6 +27,14 @@ class MossUploadingService
 
   def command
     cmd = "#{program} -m 10 -n 250 -l javascript"
+
+    unless base_submission.nil?
+      pattern = File.join(base_submission, '/**/*.js')
+      base_files = Dir.glob(pattern).sort
+      base_files.each do |base_file|
+        cmd += " -b #{base_file}"
+      end
+    end
 
     cmd += ' -d'
     submissions.each do |submission|

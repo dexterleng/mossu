@@ -44,6 +44,11 @@ class ChecksController < ApplicationController
     render json: {}, status: 202
   end
 
+  def upload_base_submission
+    check = current_user.checks.find(params[:check_id])
+    check.update!(base_submission: params[:base_submission])
+  end
+
   private
 
   def checks_params

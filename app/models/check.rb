@@ -4,6 +4,7 @@ class Check < ApplicationRecord
   belongs_to :user
   has_one_attached :report
   has_one_attached :unanonymized_report
+  has_one_attached :base_submission
 
   def can_start?
     created? && submissions.count >= 2

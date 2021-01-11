@@ -30,8 +30,6 @@ class SubmissionFlatteningService
   end
 
   def copy(src:, dst:)
-    CommandExecutor.instance.execute!(
-      "cp #{src} #{dst}"
-    )
+    FsUtils.copy(src: src, dst: dst)
   end
 end

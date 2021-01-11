@@ -19,7 +19,7 @@ class UnanonymizeReportService
       relative_path = FsUtils.relative_path(src_file, src)
       dst_file = File.join(dst, relative_path)
       dst_file_enclosing_folder = File.expand_path(File.join(dst_file, '..'))
-      mkdirp(dst_file_enclosing_folder)
+      FsUtils.mkdirp(dst_file_enclosing_folder)
       File.write(dst_file, dst_text)
     end
   end
@@ -29,11 +29,5 @@ class UnanonymizeReportService
   def unanonymize_text(src, policies)
     re = Regexp.new(policies.keys.map { |x| Regexp.escape(x) }.join('|'))
     src.gsub(re, policies)
-  end
-
-  def mkdirp(dir)
-    CommandExecutor.instance.execute!(
-      "mkdir -p #{dir}"
-    )
   end
 end

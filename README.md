@@ -82,3 +82,7 @@ pm2 start ecosystem.config.js
 Here is a diagram of the submission processing:
 
 ![](docs/submission_processing.jpg)
+
+### Why is this built as an API?
+
+Mossu is hosted on a Singapore Polytechnic server, and the hope is that eventually services used to host student submissions other than Falcon (e.g. Mimosa) can integrate with it regardless of the language/OS those services are using.

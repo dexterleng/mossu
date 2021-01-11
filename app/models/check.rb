@@ -6,6 +6,14 @@ class Check < ApplicationRecord
   has_one_attached :unanonymized_report
   has_one_attached :base_submission
 
+  validate :base_submission_is_a_zip
+
+  def base_submission_is_a_zip
+    if base_submission.attached? && base_submission.content_type != 'application/zip'
+      errors.add(:base_submission, 'Base submission must be a zip')
+    end
+  end
+
   def can_start?
     created? && submissions.count >= 2
   end

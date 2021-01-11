@@ -2,9 +2,9 @@ class Submission < ApplicationRecord
   has_one_attached :zip_file
   belongs_to :check
 
-  validate :check_zip_file
+  validate :zip_file_is_present
 
-  def check_zip_file
+  def zip_file_is_present
     unless zip_file.attached?
       errors.add(:zip_file, 'cannot be missing')
       return

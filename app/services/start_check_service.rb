@@ -194,21 +194,14 @@ class StartCheckService
   end
 
   def delete_temp_dir
-    CommandExecutor.instance.execute!(
-      "rm -rf #{temp_dir}"
-    )
+    FsUtils.rm_rf(temp_dir)
   end
 
   def mkdir(dir)
-    CommandExecutor.instance.execute!(
-      "mkdir #{dir}"
-    )
+    FsUtils.mkdir(dir)
   end
 
   def zip_folder(src:, dst:)
-    absolute_dst = File.expand_path(dst)
-    CommandExecutor.instance.execute!(
-      "cd #{src} && zip -r #{absolute_dst} ."
-    )
+    FsUtils.zip_folder(src: src, dst: dst)
   end
 end

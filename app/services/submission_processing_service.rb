@@ -39,7 +39,7 @@ class SubmissionProcessingService
   def extracted_dir
     @extracted_dir ||= begin
       dir = File.join(temp_dir, 'extracted')
-      mkdir(dir)
+      FsUtils.mkdir(dir)
       dir
     end
   end
@@ -47,7 +47,7 @@ class SubmissionProcessingService
   def commentless_dir
     @commentless_dir ||= begin
       dir = File.join(temp_dir, 'commentless')
-      mkdir(dir)
+      FsUtils.mkdir(dir)
       dir
     end
   end
@@ -57,20 +57,6 @@ class SubmissionProcessingService
   end
 
   def delete_temp_dir
-    CommandExecutor.instance.execute!(
-      "rm -rf #{temp_dir}"
-    )
-  end
-
-  def mkdir(dir)
-    CommandExecutor.instance.execute!(
-      "mkdir #{dir}"
-    )
-  end
-
-  def copy_folder_contents(src_dir:, dst_dir:)
-    CommandExecutor.instance.execute!(
-      "cp -R #{File.join(src_dir, '*')} #{dst_dir}"
-    )
+    FsUtils.rm_rf(temp_dir)
   end
 end

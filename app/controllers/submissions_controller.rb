@@ -4,6 +4,9 @@ class SubmissionsController < ApplicationController
 
   def create
     check = current_user.checks.find(submission_params[:check_id])
+
+    return render json: {}, status: 400 unless check.created?
+
     check.submissions.create!(submission_params)
   end
 

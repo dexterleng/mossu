@@ -9,7 +9,7 @@ Rails.application.routes.draw do
   resources :checks, only: [:index, :show, :create] do
     get 'report', to: 'checks#report'
     post 'start', to: 'checks#start'
-    put 'upload_base_submission', to: 'checks#upload_base_submission'
+    put 'base_submission', to: 'checks#upload_base_submission'
   end
   resources :submissions, only: [:create]
 

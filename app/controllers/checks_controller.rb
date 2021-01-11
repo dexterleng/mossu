@@ -46,6 +46,9 @@ class ChecksController < ApplicationController
 
   def upload_base_submission
     check = current_user.checks.find(params[:check_id])
+
+    return render json: {}, status: 400 unless check.created?
+
     check.update!(base_submission: params[:base_submission])
   end
 

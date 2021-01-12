@@ -1,4 +1,6 @@
 class SubmissionCommentStrippingService
+  class CommentStripperError < RuntimeError; end
+
   attr_reader :src_dir, :dst_dir
 
   def initialize(src_dir:, dst_dir:)
@@ -19,7 +21,7 @@ class SubmissionCommentStrippingService
       begin
         strip_comments(arg)
         successes << arg
-      rescue CommandError => e
+      rescue CommentStripperError => e
         failures << { arg: arg, error: e }
       end
     end
@@ -39,5 +41,7 @@ class SubmissionCommentStrippingService
       "node index.js #{src} #{dst}",
       chdir: Rails.root.join('bin/comment_stripper')
     )
+  rescue CommandError => e
+    raise CommentStripperError.new(error: e)
   end
 end

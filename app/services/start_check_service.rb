@@ -1,4 +1,6 @@
 class StartCheckService
+  class InsufficientSubmissionsToCompareError < RuntimeError; end
+
   attr_reader :check
 
   def initialize(check)
@@ -13,7 +15,10 @@ class StartCheckService
       base_submission_path = extracted_base_submission_dir
     end
 
-    processed_submission_results, = process_submissions
+    processed_submission_results = process_submissions
+    processed_submission_results = processed_submission_results.filter { |r| r[:file_count] > 0 }
+    raise InsufficientSubmissionsToCompareError.new if processed_submission_results.count < 2
+
     process_submission_paths = processed_submission_results.map { |r| r[:output_dir] }
 
     result_url = upload_submissions(process_submission_paths, base_submission_path)
@@ -34,18 +39,13 @@ class StartCheckService
   private
 
   def process_submissions
-    successes = []
-    failures = []
-
+    results = []
     submissions = check.submissions
     submissions.each do |submission|
       zip = deserialize_submission_zip(submission)
-      successes << process_submission(zip, submission)
-    rescue StandardError => e
-      failures << { submission: submission, error: e }
+      results << process_submission(zip, submission)
     end
-
-    [successes, failures]
+    results
   end
 
   def attach_report
@@ -133,12 +133,7 @@ class StartCheckService
   def process_submission(zip, submission)
     processed_submission_path = processed_submission(submission)
     mkdir(processed_submission_path)
-    result = SubmissionProcessingService.new(submission_zip_path: zip, output_dir: processed_submission_path).perform
-
-    file_count = Dir.glob(File.join(processed_submission_path, '**', '*')).select { |file| File.file?(file) }.count
-    raise StandardError.new("Zero files found in processed_submission_path #{processed_submission_path}") if file_count.zero?
-
-    result
+    SubmissionProcessingService.new(submission_zip_path: zip, output_dir: processed_submission_path).perform
   end
 
   def processed_submission(submission)

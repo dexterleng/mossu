@@ -9,11 +9,16 @@ class SubmissionProcessingService
     strip_comments(src_dir: extracted_dir, dst_dir: commentless_dir)
     original_path_map = flatten(src_dir: commentless_dir, dst_dir: output_dir)
 
-    {
+    file_count = Dir.glob(File.join(output_dir, '**', '*')).select { |file| File.file?(file) }.count
+
+    result = {
       submission_zip_path: submission_zip_path,
       output_dir: output_dir,
-      original_path_map: original_path_map
+      original_path_map: original_path_map,
+      file_count: file_count
     }
+
+    result
   ensure
     delete_temp_dir
   end

@@ -25,7 +25,7 @@ Here is a high-level overview of how Mossu works and is intended to be used:
 
 ## API Documentation
 
-Refer to `api.md`
+Refer to `docs/api.md`
 
 ## Requirements
 

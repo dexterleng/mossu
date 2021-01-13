@@ -110,6 +110,7 @@ GEM
       mini_portile2 (~> 2.4.0)
     open3 (0.1.0)
     pg (1.1.4)
+    prometheus-client (2.1.0)
     public_suffix (4.0.6)
     puma (4.3.7)
       nio4r (~> 2.0)
@@ -221,6 +222,7 @@ DEPENDENCIES
   listen (~> 3.2)
   open3
   pg
+  prometheus-client
   puma (~> 4.1)
   rails (~> 6.0.3, >= 6.0.3.4)
   sass-rails (>= 6)

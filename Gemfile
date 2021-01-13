@@ -26,6 +26,7 @@ gem 'bcrypt'
 gem 'knock'
 gem 'open3'
 gem 'pg'
+gem 'prometheus-client'
 gem 'sidekiq'
 
 # Use Active Storage variant

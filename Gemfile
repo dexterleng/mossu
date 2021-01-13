@@ -28,6 +28,7 @@ gem 'open3'
 gem 'pg'
 gem 'prometheus-client'
 gem 'sidekiq'
+gem 'sidekiq-prometheus-exporter', '~> 0.1'
 
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'

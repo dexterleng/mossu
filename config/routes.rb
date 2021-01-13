@@ -14,4 +14,7 @@ Rails.application.routes.draw do
   resources :submissions, only: [:create]
 
   mount Sidekiq::Web => '/sidekiq'
+
+  require 'sidekiq/prometheus/exporter'
+  mount Sidekiq::Prometheus::Exporter => '/sidekiq_metrics'
 end

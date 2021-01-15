@@ -12,6 +12,9 @@ class CommandExecutor
     stdout, stderr, status = Open3.capture3(cmd, options)
     exit_code = status.to_i
 
+    logger.info stdout
+    logger.info stderr
+
     CommandResult.new(
       command: cmd,
       exit_code: exit_code,

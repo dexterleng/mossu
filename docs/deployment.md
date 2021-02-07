@@ -65,7 +65,9 @@ pm2 logs
 Mossu depends on Redis and Postgres. The production server relies on the `docker-compose.yml` file in the root directory.
 
 ```
-docker-compose up
+# start dependencies detached
+docker-compose up -d
+
 docker-compose down
 docker-compose restart
 

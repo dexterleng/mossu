@@ -2,6 +2,10 @@ require_relative 'boot'
 
 require 'rails/all'
 
+require 'rack'
+require 'prometheus/middleware/collector'
+require 'prometheus/middleware/exporter'
+
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
@@ -19,5 +23,9 @@ module Mossu
 
     config.active_job.queue_adapter = :sidekiq
     config.webpacker.check_yarn_integrity = false
+
+    config.middleware.use Rack::Deflater
+    config.middleware.use Prometheus::Middleware::Exporter
+    config.middleware.use Prometheus::Middleware::Collector
   end
 end

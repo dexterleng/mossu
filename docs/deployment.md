@@ -60,6 +60,22 @@ pm2 restart ecosystem.config.js
 pm2 logs
 ```
 
+### Dependencies
+
+Mossu depends on Redis and Postgres. The production server relies on the `docker-compose.yml` file in the root directory.
+
+```
+docker-compose up
+docker-compose down
+docker-compose restart
+
+# show all containers
+docker ps -a
+
+# show logs for a container
+docker logs <container id>
+```
+
 ### Helpful PM2 commands
 
 Overview of process statuses

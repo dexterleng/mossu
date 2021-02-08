@@ -15,7 +15,11 @@ class StartCheckService
       base_submission_path = extracted_base_submission_dir
     end
 
-    processed_submission_results = process_submissions
+    processed_submission_results, processing_errors = process_submissions
+    processing_errors.each do |error|
+      logger.error("[Processing Error] #{error}")
+    end
+
     processed_submission_results = processed_submission_results.filter { |r| r[:file_count] > 0 }
     raise InsufficientSubmissionsToCompareError.new if processed_submission_results.count < 2
 
@@ -40,12 +44,15 @@ class StartCheckService
 
   def process_submissions
     results = []
+    errors = []
     submissions = check.submissions
     submissions.each do |submission|
       zip = deserialize_submission_zip(submission)
       results << process_submission(zip, submission)
+    rescue StandardError => e
+      errors << e
     end
-    results
+    [results, errors]
   end
 
   def attach_report
@@ -198,5 +205,9 @@ class StartCheckService
 
   def zip_folder(src:, dst:)
     FsUtils.zip_folder(src: src, dst: dst)
+  end
+
+  def logger
+    @logger ||= Logger.new(STDOUT)
   end
 end

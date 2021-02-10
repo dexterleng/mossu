@@ -53,6 +53,17 @@ cd bin/comment_stripper/ && npm install && cd ../../
 
 [Register for MOSS](http://moss.stanford.edu/general/moss.html) and put the `mossnet` perl script containing your user id in `bin/mossnet`.
 
+Set the appropriate Sidekiq username/password:
+
+```
+EDITOR="vim" rails credentials:edit
+```
+
+```
+sidekiq_admin_user: <username>
+sidekiq_admin_password: <password> 
+```
+
 Start the Rails server:
 
 ```

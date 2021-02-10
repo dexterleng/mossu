@@ -13,6 +13,10 @@ Rails.application.routes.draw do
   end
   resources :submissions, only: [:create]
 
+  Sidekiq::Web.use Rack::Auth::Basic do |username, password|
+    ActiveSupport::SecurityUtils.secure_compare(username, Rails.application.credentials[:sidekiq_admin_user]) &
+      ActiveSupport::SecurityUtils.secure_compare(password, Rails.application.credentials[:sidekiq_admin_password])
+  end
   mount Sidekiq::Web => '/sidekiq'
 
   require 'sidekiq/prometheus/exporter'

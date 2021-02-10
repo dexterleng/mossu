@@ -78,6 +78,20 @@ docker ps -a
 docker logs <container id>
 ```
 
+### Inspecting Postgres
+
+```
+psql --host localhost --port 5432  --username postgres --password
+```
+
+Alternatively:
+
+```
+docker exec -it <container id> /bin/bash
+
+> psql --username postgres
+```
+
 ### Helpful PM2 commands
 
 Overview of process statuses

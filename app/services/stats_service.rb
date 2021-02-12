@@ -8,7 +8,17 @@ class StatsService
     @port = port
   end
 
-  delegate :increment, to: :statsd
+  delegate :increment, :timing, :gauge, :time, to: :statsd
+
+  def track(event)
+    increment("#{event}.started")
+    result = time("#{event}.timing_ms") { yield }
+    increment("#{event}.completed")
+    result
+  rescue => e
+    increment("#{event}.failed")
+    raise e
+  end
 
   private
 

@@ -43,3 +43,5 @@ yarn-debug.log*
 .DS_Store
 
 bin/mossnet
+
+config/credentials.yml.enc

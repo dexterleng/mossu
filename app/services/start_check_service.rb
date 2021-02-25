@@ -10,9 +10,9 @@ class StartCheckService
   def perform
     base_submission_path = nil
     if check.base_submission.attached?
-      deserialized_base_submission_zip = deserialize_base_submission_zip
-      BaseSubmissionProcessingService.new(submission_zip_path: deserialized_base_submission_zip, output_dir: extracted_base_submission_dir).perform
-      base_submission_path = extracted_base_submission_dir
+      stats_service.track('base_submission_processing') do
+        base_submission_path = process_base_submission
+      end
     end
 
     processed_submission_results, processing_errors = process_submissions
@@ -25,8 +25,14 @@ class StartCheckService
 
     process_submission_paths = processed_submission_results.map { |r| r[:output_dir] }
 
-    result_url = upload_submissions(process_submission_paths, base_submission_path)
-    download_report(result_url)
+    result_url = stats_service.track('moss_uploading') do
+      upload_submissions(process_submission_paths, base_submission_path)
+    end
+
+    stats_service.track('download_moss_report') do
+      download_report(result_url)
+    end
+
     zip_report
     attach_report
 
@@ -42,13 +48,21 @@ class StartCheckService
 
   private
 
+  def process_base_submission
+    deserialized_base_submission_zip = deserialize_base_submission_zip
+    BaseSubmissionProcessingService.new(submission_zip_path: deserialized_base_submission_zip, output_dir: extracted_base_submission_dir).perform
+    extracted_base_submission_dir
+  end
+
   def process_submissions
     results = []
     errors = []
     submissions = check.submissions
     submissions.each do |submission|
-      zip = deserialize_submission_zip(submission)
-      results << process_submission(zip, submission)
+      stats_service.track('submission_processing') do
+        zip = deserialize_submission_zip(submission)
+        results << process_submission(zip, submission)
+      end
     rescue StandardError => e
       errors << e
     end
@@ -209,5 +223,9 @@ class StartCheckService
 
   def logger
     @logger ||= Logger.new(STDOUT)
+  end
+
+  def stats_service
+    @stats_service ||= StatsService.new(namespace: 'start_check_service')
   end
 end

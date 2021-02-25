@@ -30,6 +30,8 @@ gem 'prometheus-client'
 gem 'sidekiq'
 gem 'sidekiq-prometheus-exporter', '~> 0.1'
 
+gem "statsd-ruby"
+
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'
 

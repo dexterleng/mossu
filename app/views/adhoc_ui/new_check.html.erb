@@ -3,6 +3,11 @@ table, th, td {
   border: 1px solid black;
   border-collapse: collapse;
 }
+
+.form-group {
+  padding-top: 0.5rem;
+}
+
 </style>
 
 <h1>Create a Check</h1>
@@ -11,6 +16,10 @@ table, th, td {
   <div class="form-group">
       <label for="input-name">Check name</label>
       <input type="text" class="form-control" id="input-name">
+  </div>
+  <div class="form-group">
+      <label for="input-base-submission">(Optional) Base Submission to reduce false-positives (.zip)</label>
+      <input type="file" class="form-control" id="input-base-submission">
   </div>
   <div class="form-group">
       <label for="input-submissons">Submissions (.zip only)</label>
@@ -44,6 +53,13 @@ $("#check-form").submit(function (e) {
     return;
   }
 
+  const baseSubmissionElement = document.getElementById("input-base-submission");
+  const baseSubmission = baseSubmissionElement.files[0];
+  if (baseSubmission && !baseSubmission.name.endsWith('.zip')) {
+    alert('Please upload only zip files for the base submission');
+    return;
+  }
+
   const submissionsElement = document.getElementById("input-submissions");
 
   const submissions = submissionsElement.files;
@@ -60,7 +76,7 @@ $("#check-form").submit(function (e) {
     }
   }
 
-  createAndStartCheck(name, submissions, jwt)
+  createAndStartCheck(name, baseSubmission, submissions, jwt)
     .then(() => {
       alert("Check created and started.");
       window.location.replace(`/ui/checks/`);
@@ -72,8 +88,13 @@ $("#check-form").submit(function (e) {
   return false
 });
 
-async function createAndStartCheck(name, submissions, jwt) {
+async function createAndStartCheck(name, baseSubmission, submissions, jwt) {
   const { id } = await createCheck(name, jwt);
+
+  if (baseSubmission) {
+    await uploadBaseSubmission(id, baseSubmission, jwt);
+  }
+
   for (const submission of submissions) {
     await uploadSubmission(id, submission, jwt);
   }
@@ -92,6 +113,32 @@ function createCheck(name, jwt) {
       "Authorization": `Bearer ${jwt}`
     },
   })
+}
+
+async function uploadBaseSubmission(checkId, submission, jwt) {
+  let formData = new FormData();     
+  formData.append('base_submission', submission);
+  const response = await fetch(`/checks/${checkId}/base_submission`,{
+    method: "PUT",
+    body: formData,
+    headers: new Headers({
+      'Authorization': `Bearer ${jwt}`
+    })
+  }); 
+  if (response.ok) {
+    return;
+  } else {
+      const responseError = {
+        type: 'Error',
+        message: result.message || 'Something went wrong',
+        data: result.data || '',
+        code: result.code || '',
+      };
+
+      let error = new Error();
+      error = { ...error, ...responseError };
+      throw (error);
+  }   
 }
 
 async function uploadSubmission(checkId, submission, jwt) {

@@ -20,10 +20,15 @@ class ChecksController < ApplicationController
   end
 
   def create
-    check = current_user.checks.create!(
+    check = current_user.checks.create(
       check_params.merge(status: 'created')
     )
-    render json: check
+
+    if check.save
+      render json: check
+    else
+      render :json => { :errors => check.errors.full_messages }, :status => 422
+    end
   end
 
   def report

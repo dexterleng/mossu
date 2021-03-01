@@ -7,7 +7,12 @@ class SubmissionsController < ApplicationController
 
     return render json: {}, status: 400 unless check.created?
 
-    check.submissions.create!(submission_params)
+    submission = check.submissions.create(submission_params)
+    if submission.save
+      render json: {}
+    else
+      render :json => { :errors => submission.errors.full_messages }, :status => 422
+    end
   end
 
   private

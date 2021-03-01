@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   scope '/ui/' do
     get '/login/', to: 'adhoc_ui#login'
     get '/checks/', to: 'adhoc_ui#checks'
+    get '/checks/new', to: 'adhoc_ui#new_check'
   end
 
   scope '/auth' do

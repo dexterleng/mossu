@@ -1,0 +1,165 @@
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
+
+<h1>Create a Check</h1>
+
+<form id="check-form">
+  <div class="form-group">
+      <label for="input-name">Check name</label>
+      <input type="text" class="form-control" id="input-name">
+  </div>
+  <div class="form-group">
+      <label for="input-submissons">Submissions (.zip only)</label>
+      <input type="file" class="form-control" id="input-submissions" multiple>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<script>
+
+let jwt;
+main();
+
+function main() {
+  jwt = localStorage.getItem('jwt');
+
+  if (jwt === null || jwt === undefined) {
+    alert("Please login");
+    window.location.replace(`/ui/login/`);
+    return;
+  }
+}
+
+$("#check-form").submit(function (e) {
+  e.preventDefault();
+
+  const name = $("#input-name").val();
+
+  if (name === null || name === undefined || name.length === 0) {
+    alert("Please provide a check name");
+    return;
+  }
+
+  const submissionsElement = document.getElementById("input-submissions");
+
+  const submissions = submissionsElement.files;
+  if (submissions.length < 2) {
+    alert('Please upload at least two submissions.')
+    return;
+  }
+
+  for (const submission of submissions) {
+    console.log(submission.name);
+    if (!submission.name.endsWith('.zip')) {
+      alert("Please upload only zip files");
+      return;
+    }
+  }
+
+  createAndStartCheck(name, submissions, jwt)
+    .then(() => {
+      alert("Check created and started.");
+      window.location.replace(`/ui/checks/`);
+    }).catch((e) => {
+      alert(`Error. Please check the console for error logs.`);
+      console.log(e);
+    })
+
+  return false
+});
+
+async function createAndStartCheck(name, submissions, jwt) {
+  const { id } = await createCheck(name, jwt);
+  for (const submission of submissions) {
+    await uploadSubmission(id, submission, jwt);
+  }
+  await startCheck(id, jwt);
+}
+
+function createCheck(name, jwt) {
+  return makeApiRequest({
+    url: '/checks/',
+    type: 'post',
+    contentType: "application/json",
+    data: JSON.stringify({
+      name
+    }),
+    headers: {
+      "Authorization": `Bearer ${jwt}`
+    },
+  })
+}
+
+async function uploadSubmission(checkId, submission, jwt) {
+  let formData = new FormData();     
+  formData.append("submission[check_id]", checkId);
+  formData.append("submission[zip_file]", submission);
+  const response = await fetch('/submissions/',{
+    method: "POST",
+    body: formData,
+    headers: new Headers({
+      'Authorization': `Bearer ${jwt}`
+    })
+  }); 
+  if (response.ok) {
+    return response.json();
+  } else {
+      const responseError = {
+        type: 'Error',
+        message: result.message || 'Something went wrong',
+        data: result.data || '',
+        code: result.code || '',
+      };
+
+      let error = new Error();
+      error = { ...error, ...responseError };
+      throw (error);
+  }   
+}
+
+function startCheck(checkId, jwt) {
+  return makeApiRequest({
+    url: `/checks/${checkId}/start`,
+    type: 'post',
+    headers: {
+      "Authorization": `Bearer ${jwt}`
+    },
+  }) 
+}
+
+function ajaxPromise(ajaxOptions) {
+  return new Promise((resolve, reject) => {
+    $.ajax(ajaxOptions)
+        .done(function (data) { resolve(data) })
+        .fail(function (jqXHR) { reject(jqXHR) });
+  });
+}
+
+function retryingAjax(ajaxOptions, maxRetries, timeoutMs) {
+    const thunk = () => ajaxPromise(ajaxOptions);
+    const retry = (fn, maxRetries, timeoutMs) => new Promise((resolve, reject) => {
+        fn()
+            .then(resolve)
+            .catch((e) => {
+                if (maxRetries === 1 || (e.status && e.status !== 500)) {
+                    return reject(e);
+                }
+                console.log('retrying failed promise...');
+                setTimeout(() => {
+                    retry(fn, maxRetries - 1, timeoutMs).then(resolve).catch(reject);
+                }, timeoutMs);
+            })
+    });
+    return retry(thunk, maxRetries, timeoutMs);
+}
+
+async function makeApiRequest(ajaxOptions, maxRetries = 1, timeoutMs = 1000) {
+  const res = await retryingAjax(ajaxOptions, maxRetries, timeoutMs);
+  return res;
+}
+
+</script>

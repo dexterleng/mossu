@@ -1,6 +1,11 @@
 require 'sidekiq/web'
 
 Rails.application.routes.draw do
+  scope '/ui/' do
+    get '/login/', to: 'adhoc_ui#login'
+    get '/checks/', to: 'adhoc_ui#checks'
+  end
+
   scope '/auth' do
     post '/signin', to: 'user_token#create'
     post '/signup', to: 'users#create'

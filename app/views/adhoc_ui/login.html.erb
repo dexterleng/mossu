@@ -1,0 +1,79 @@
+<h1>Login</h1>
+
+<form id="login-form">
+  <div class="form-group">
+    <label for="input-email">Email address</label>
+    <input type="email" class="form-control" id="input-email" aria-describedby="emailHelp" placeholder="Enter email">
+  </div>
+  <div class="form-group">
+    <label for="input-password">Password</label>
+    <input type="password" class="form-control" id="input-password" placeholder="Password">
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<script>
+
+$("#login-form").submit(function(e) {
+    e.preventDefault();
+
+    const email = $("#input-email").val();
+    const password = $("#input-password").val();
+
+    const loginRequest = makeApiRequest({
+      url: '/auth/signin',
+      type: 'post',
+      contentType: "application/json",
+      data: JSON.stringify({
+        auth: {
+          email, password
+        }
+      })
+    })
+
+    loginRequest
+      .then((res) => {
+        const jwt = res.jwt;
+        localStorage.setItem('jwt', jwt);
+        alert("Successful Login");
+        window.location.replace(`/ui/checks/`);
+      })
+      .catch(e => {
+        alert(`Login failed with status ${e.status}`);
+      })
+
+    return false;
+});
+
+function ajaxPromise(ajaxOptions) {
+  return new Promise((resolve, reject) => {
+    $.ajax(ajaxOptions)
+        .done(function (data) { resolve(data) })
+        .fail(function (jqXHR) { reject(jqXHR) });
+  });
+}
+
+function retryingAjax(ajaxOptions, maxRetries, timeoutMs) {
+    const thunk = () => ajaxPromise(ajaxOptions);
+    const retry = (fn, maxRetries, timeoutMs) => new Promise((resolve, reject) => {
+        fn()
+            .then(resolve)
+            .catch((e) => {
+                if (maxRetries === 1 || (e.status && e.status !== 500)) {
+                    return reject(e);
+                }
+                console.log('retrying failed promise...');
+                setTimeout(() => {
+                    retry(fn, maxRetries - 1, timeoutMs).then(resolve).catch(reject);
+                }, timeoutMs);
+            })
+    });
+    return retry(thunk, maxRetries, timeoutMs);
+}
+
+async function makeApiRequest(ajaxOptions, maxRetries = 1, timeoutMs = 1000) {
+  const res = await retryingAjax(ajaxOptions, maxRetries, timeoutMs);
+  return res;
+}
+
+</script>

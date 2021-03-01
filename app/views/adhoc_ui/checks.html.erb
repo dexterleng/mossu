@@ -1,0 +1,138 @@
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
+
+<h1>Checks</h1>
+
+<div id="check-table-container">
+</div>
+
+<script>
+
+main();
+
+function main() {
+  const jwt = localStorage.getItem('jwt');
+
+  if (jwt === null || jwt === undefined) {
+    alert("Please login");
+    window.location.replace(`/ui/login/`);
+    return;
+  }
+
+  const checksRequest = makeApiRequest({
+    url: '/checks/',
+    type: 'get',
+    headers: {
+      "Authorization": `Bearer ${jwt}`
+    },
+  })
+
+  checksRequest
+    .then(checks => {
+      checks.reverse();
+      const table = renderCheckTable(checks);
+      $("#check-table-container").append(table);
+    })
+    .catch(e => {
+      alert(`Fetching checks failed with status ${e.status}`);
+    })
+
+  $(document).on('click', ".download-report", function() {
+    const checkId = $(this).attr('data-check-id');
+    
+    $.ajax({
+      type: "GET",
+      url: `/checks/${checkId}/report`,
+      headers: {
+        'Authorization': `Bearer ${jwt}`
+      },
+      xhrFields: {
+        responseType: 'blob'
+      },
+      success: function (blob) {
+        var windowUrl = window.URL || window.webkitURL;
+        var url = windowUrl.createObjectURL(blob);
+        var anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `check-${checkId}-report.zip`;
+        anchor.click();
+        windowUrl.revokeObjectURL(url);
+      },
+      error: function (error) {
+        console.log(error);
+      }
+    });
+
+  })
+}
+
+function downloadFile() {
+
+}
+
+function renderCheckTable(checks) {
+  const renderRow = check => {
+    const downloadButton = `<button class="download-report" data-check-id="${check.id}">Download Report</button>`
+    return `
+    <tr>
+      <td>${check.id}</td>
+      <td>${check.name}</td>
+      <td>${check.status}</td>
+      <td>${check.created_at}</td>
+      <td>${check.updated_at}</td>
+      <td>${ check.status === 'completed' ? downloadButton : "" }</td>
+    </tr>
+    `
+  }
+
+  return `
+  <table>
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">Name</th>
+      <th scope="col">Status</th>
+      <th scope="col">Created At</th> 
+      <th scope="col">Updated At</th>
+      <th scope="col">Actions</th>
+    </tr>
+    ${checks.map(renderRow).join('\n')}
+  </table>
+  `
+}
+
+function ajaxPromise(ajaxOptions) {
+  return new Promise((resolve, reject) => {
+    $.ajax(ajaxOptions)
+        .done(function (data) { resolve(data) })
+        .fail(function (jqXHR) { reject(jqXHR) });
+  });
+}
+
+function retryingAjax(ajaxOptions, maxRetries, timeoutMs) {
+    const thunk = () => ajaxPromise(ajaxOptions);
+    const retry = (fn, maxRetries, timeoutMs) => new Promise((resolve, reject) => {
+        fn()
+            .then(resolve)
+            .catch((e) => {
+                if (maxRetries === 1 || (e.status && e.status !== 500)) {
+                    return reject(e);
+                }
+                console.log('retrying failed promise...');
+                setTimeout(() => {
+                    retry(fn, maxRetries - 1, timeoutMs).then(resolve).catch(reject);
+                }, timeoutMs);
+            })
+    });
+    return retry(thunk, maxRetries, timeoutMs);
+}
+
+async function makeApiRequest(ajaxOptions, maxRetries = 1, timeoutMs = 1000) {
+  const res = await retryingAjax(ajaxOptions, maxRetries, timeoutMs);
+  return res;
+}
+
+</script>

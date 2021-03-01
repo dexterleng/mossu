@@ -39,7 +39,7 @@ class ChecksController < ApplicationController
     return render json: {}, status: 400 unless check.can_start?
 
     check.transition_to_queued
-    StartCheckJob.perform_later(check.id)
+    StartCheckJob.perform_later(check.id, params[:language])
 
     render json: {}, status: 202
   end

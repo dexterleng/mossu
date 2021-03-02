@@ -33,9 +33,14 @@ class ChecksController < ApplicationController
 
   def report
     check = current_user.checks.find(params[:check_id])
-    return render json: {}, status: 404 unless check.unanonymized_report_exists?
 
-    redirect_to url_for(check.unanonymized_report)
+    if check.unanonymized_report_exists?
+      return redirect_to url_for(check.unanonymized_report)
+    elsif check.report_exists?
+      return redirect_to url_for(check.report)
+    end
+
+    return render json: {}, status: 404
   end
 
   def start
@@ -44,7 +49,7 @@ class ChecksController < ApplicationController
     return render json: {}, status: 400 unless check.can_start?
 
     check.transition_to_queued
-    StartCheckJob.perform_later(check.id, params[:language])
+    StartCheckJob.perform_later(check_id: check.id, language: params[:language])
 
     render json: {}, status: 202
   end

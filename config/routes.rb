@@ -3,6 +3,7 @@ require 'sidekiq/web'
 Rails.application.routes.draw do
   scope '/ui/' do
     get '/login/', to: 'adhoc_ui#login'
+    get '/register/', to: 'adhoc_ui#register'
     get '/checks/', to: 'adhoc_ui#checks'
     get '/checks/new', to: 'adhoc_ui#new_check'
   end

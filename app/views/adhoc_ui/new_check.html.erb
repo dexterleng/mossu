@@ -18,6 +18,14 @@ table, th, td {
       <input type="text" class="form-control" id="input-name">
   </div>
   <div class="form-group">
+    <label>Submission Programming Language</label>
+    <select id="input-language">
+      <option value="javascript">Javascript</option>
+      <option value="java">Java</option>
+      <option value="python">Python</option>
+    </select>
+  </div>
+  <div class="form-group">
       <label for="input-base-submission">(Optional) Base Submission to reduce false-positives (.zip)</label>
       <input type="file" class="form-control" id="input-base-submission">
   </div>
@@ -53,6 +61,8 @@ $("#check-form").submit(function (e) {
     return;
   }
 
+  const language = $("#input-language").val();
+
   const baseSubmissionElement = document.getElementById("input-base-submission");
   const baseSubmission = baseSubmissionElement.files[0];
   if (baseSubmission && !baseSubmission.name.endsWith('.zip')) {
@@ -76,7 +86,7 @@ $("#check-form").submit(function (e) {
     }
   }
 
-  createAndStartCheck(name, baseSubmission, submissions, jwt)
+  createAndStartCheck(name, language, baseSubmission, submissions, jwt)
     .then(() => {
       alert("Check created and started.");
       window.location.replace(`/ui/checks/`);
@@ -88,7 +98,7 @@ $("#check-form").submit(function (e) {
   return false
 });
 
-async function createAndStartCheck(name, baseSubmission, submissions, jwt) {
+async function createAndStartCheck(name, language, baseSubmission, submissions, jwt) {
   const { id } = await createCheck(name, jwt);
 
   if (baseSubmission) {
@@ -98,7 +108,7 @@ async function createAndStartCheck(name, baseSubmission, submissions, jwt) {
   for (const submission of submissions) {
     await uploadSubmission(id, submission, jwt);
   }
-  await startCheck(id, jwt);
+  await startCheck(id, language, jwt);
 }
 
 function createCheck(name, jwt) {
@@ -168,10 +178,14 @@ async function uploadSubmission(checkId, submission, jwt) {
   }   
 }
 
-function startCheck(checkId, jwt) {
+function startCheck(checkId, language, jwt) {
   return makeApiRequest({
     url: `/checks/${checkId}/start`,
     type: 'post',
+    data: JSON.stringify({
+      language
+    }),
+    contentType: 'application/json',
     headers: {
       "Authorization": `Bearer ${jwt}`
     },

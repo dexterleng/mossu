@@ -1,7 +1,9 @@
 class StartCheckJob < ApplicationJob
   queue_as :default
 
-  def perform(check_id, language)
+  def perform(options)
+    check_id = options[:check_id]
+    language = options[:language]
     check_service = check_service(language)
     stats_service.track('check') do
       check = Check.find(check_id)

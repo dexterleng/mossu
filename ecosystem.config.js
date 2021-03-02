@@ -2,7 +2,7 @@ module.exports = {
   apps : [
     {
       name: 'mossu_server',
-      script: 'RAILS_ENV=production bundle exec rails s -p 3002',
+      script: 'RAILS_SERVE_STATIC_FILES=true RAILS_ENV=production bundle exec rails s -p 3002',
       watch: false,
     },
     {

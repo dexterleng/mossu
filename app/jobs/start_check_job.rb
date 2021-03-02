@@ -22,6 +22,7 @@ class StartCheckJob < ApplicationJob
 
   def check_service(language)
     return JavaStartCheckService if language == 'java'
+    return PythonStartCheckService if language == 'python'
 
     StartCheckService
   end

@@ -13,9 +13,9 @@ class Submission < ApplicationRecord
   end
 
   def zip_file_max_size
-    max_bytes = 20 * 1000 * 1000
+    max_bytes = 50 * 1000 * 1000
     if zip_file.attached? && zip_file.blob.byte_size > max_bytes
-      errors.add(:zip_file, 'Submission cannot exceed 20 MB')
+      errors.add(:zip_file, 'Submission cannot exceed 50 MB')
     end
   end
 end
